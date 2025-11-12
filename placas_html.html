@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reconocimiento de Placas - Visión Artificial</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.8rem 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+        }
+
+        .header {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+
+        .code-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .glossary-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-height: calc(100vh - 300px);
+            overflow-y: auto;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .glossary-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .glossary-section::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .glossary-section::-webkit-scrollbar-thumb {
+            background: rgba(240, 147, 251, 0.5);
+            border-radius: 10px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #f093fb;
+        }
+
+        .code-container {
+            background: #1e1e1e;
+            border-radius: 10px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            border: 1px solid rgba(240, 147, 251, 0.3);
+        }
+
+        pre {
+            margin: 0;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            color: #d4d4d4;
+        }
+
+        .keyword {
+            color: #569cd6;
+            font-weight: 500;
+        }
+
+        .string {
+            color: #ce9178;
+        }
+
+        .comment {
+            color: #6a9955;
+            font-style: italic;
+        }
+
+        .function {
+            color: #dcdcaa;
+        }
+
+        .number {
+            color: #b5cea8;
+        }
+
+        .variable {
+            color: #9cdcfe;
+        }
+
+        .operator {
+            color: #d4d4d4;
+        }
+
+        .glossary-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid #f093fb;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .glossary-item:hover {
+            background: rgba(240, 147, 251, 0.1);
+            transform: translateX(5px);
+        }
+
+        .glossary-item h3 {
+            color: #f093fb;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .glossary-item p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .info-box {
+            background: rgba(240, 147, 251, 0.2);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(240, 147, 251, 0.3);
+        }
+
+        .info-box ul {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .info-box li {
+            margin-bottom: 0.5rem;
+        }
+
+        .copy-button {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .copy-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(240, 147, 251, 0.4);
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .glossary-section {
+                position: relative;
+                top: 0;
+                max-height: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .header-box {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .code-section, .glossary-section {
+                padding: 1.5rem;
+            }
+
+            .code-container {
+                padding: 1rem;
+            }
+
+            pre {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-box">
+            <a href="index.html" class="back-button">← Volver al catálogo</a>
+            
+            <div class="header">
+                <h1>🚗 Reconocimiento de Placas Vehiculares</h1>
+                <p class="subtitle">Sistema de control de acceso mediante OCR con Python</p>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="code-section">
+                <h2>💻 Código Python</h2>
+                
+                <div class="info-box">
+                    <p><strong>Este sistema controla el acceso al estacionamiento del CBTis 144</strong></p>
+                    <p>Funcionalidad:</p>
+                    <ul>
+                        <li>Carga imágenes de placas vehiculares desde archivos</li>
+                        <li>Procesa las imágenes (escala de grises y binarización)</li>
+                        <li>Extrae texto usando Tesseract OCR</li>
+                        <li>Valida contra lista de placas autorizadas</li>
+                        <li>Genera reporte de acceso permitido/denegado</li>
+                    </ul>
+                </div>
+
+                <button class="copy-button" onclick="copiarCodigo()">📋 Copiar Código</button>
+
+                <div class="code-container">
+                    <pre><code id="pythonCode"><span class="keyword">import</span> cv2
+<span class="keyword">import</span> pytesseract
+
+<span class="comment"># Ruta del ejecutable de Tesseract</span>
+<span class="variable">pytesseract</span>.<span class="variable">pytesseract</span>.<span class="variable">tesseract_cmd</span> <span class="operator">=</span> <span class="string">r"C:\Users\MATUTINO\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"</span>
+
+<span class="comment"># Lista de placas permitidas</span>
+<span class="variable">placas_permitidas</span> <span class="operator">=</span> [<span class="string">"QKJW88"</span>, <span class="string">"GKORH52"</span>, <span class="string">"OKO96T"</span>, <span class="string">"LRJWS52"</span>, <span class="string">"XYZ789"</span>]
+
+<span class="comment"># 1. Cargar 2 imágenes de placas</span>
+<span class="variable">imagenes</span> <span class="operator">=</span> [<span class="string">"placa1.jpeg"</span>, <span class="string">"placa2.webp"</span>]
+
+<span class="variable">placas_leidas</span> <span class="operator">=</span> []
+
+<span class="function">print</span>(<span class="string">"\n=== LECTURA DE PLACAS ==="</span>)
+
+<span class="keyword">for</span> <span class="variable">img</span> <span class="keyword">in</span> <span class="variable">imagenes</span>:
+    <span class="function">print</span>(<span class="string">"\nProcesando:"</span>, <span class="variable">img</span>)
+    <span class="variable">placa</span> <span class="operator">=</span> <span class="variable">cv2</span>.<span class="function">imread</span>(<span class="variable">img</span>)
+
+    <span class="comment"># Si la imagen tiene datos válidos (ancho y alto mayor a 0)</span>
+    <span class="keyword">if</span> <span class="function">print</span>(<span class="variable">placa</span>) <span class="keyword">is not</span> <span class="function">print</span> <span class="keyword">and</span> <span class="variable">placa</span> <span class="keyword">is not</span> <span class="keyword">False</span>:
+        <span class="keyword">if</span> <span class="variable">placa</span>.<span class="variable">size</span> <span class="operator">></span> <span class="number">0</span>:
+            <span class="variable">placa</span> <span class="operator">=</span> <span class="variable">cv2</span>.<span class="function">resize</span>(<span class="variable">placa</span>, (<span class="number">1000</span>, <span class="number">400</span>))
+            <span class="variable">gris</span> <span class="operator">=</span> <span class="variable">cv2</span>.<span class="function">cvtColor</span>(<span class="variable">placa</span>, <span class="variable">cv2</span>.<span class="variable">COLOR_BGR2GRAY</span>)
+            <span class="variable">binaria</span> <span class="operator">=</span> <span class="variable">cv2</span>.<span class="function">threshold</span>(<span class="variable">gris</span>, <span class="number">120</span>, <span class="number">255</span>, <span class="variable">cv2</span>.<span class="variable">THRESH_BINARY</span>)[<span class="number">1</span>]
+
+            <span class="comment"># 2. Extraer texto con OCR</span>
+            <span class="variable">texto</span> <span class="operator">=</span> <span class="variable">pytesseract</span>.<span class="function">image_to_string</span>(<span class="variable">binaria</span>, <span class="variable">lang</span><span class="operator">=</span><span class="string">"eng"</span>)
+
+            <span class="comment"># 3. Limpiar texto</span>
+            <span class="variable">texto</span> <span class="operator">=</span> <span class="variable">texto</span>.<span class="function">upper</span>()
+            <span class="variable">texto</span> <span class="operator">=</span> <span class="variable">texto</span>.<span class="function">replace</span>(<span class="string">" "</span>, <span class="string">""</span>)
+            <span class="variable">texto</span> <span class="operator">=</span> <span class="variable">texto</span>.<span class="function">replace</span>(<span class="string">"-"</span>, <span class="string">""</span>)
+            <span class="variable">texto</span> <span class="operator">=</span> <span class="variable">texto</span>.<span class="function">replace</span>(<span class="string">"\n"</span>, <span class="string">""</span>)
+
+            <span class="variable">placas_leidas</span>.<span class="function">append</span>(<span class="variable">texto</span>)
+
+            <span class="function">print</span>(<span class="string">"Texto detectado:"</span>, <span class="variable">texto</span>)
+
+            <span class="comment"># Mostrar y guardar imagen procesada</span>
+            <span class="variable">cv2</span>.<span class="function">imshow</span>(<span class="string">"Procesada: "</span> <span class="operator">+</span> <span class="variable">img</span>, <span class="variable">binaria</span>)
+            <span class="variable">cv2</span>.<span class="function">imwrite</span>(<span class="string">"procesada_"</span> <span class="operator">+</span> <span class="variable">img</span>, <span class="variable">binaria</span>)
+            <span class="function">print</span>(<span class="string">"Imagen procesada guardada como:"</span>, <span class="string">"procesada_"</span> <span class="operator">+</span> <span class="variable">img</span>)
+    <span class="keyword">else</span>:
+        <span class="function">print</span>(<span class="string">" No se pudo leer la imagen:"</span>, <span class="variable">img</span>)
+        <span class="variable">placas_leidas</span>.<span class="function">append</span>(<span class="string">"SIN_LECTURA"</span>)
+
+<span class="variable">cv2</span>.<span class="function">waitKey</span>(<span class="number">0</span>)
+<span class="variable">cv2</span>.<span class="function">destroyAllWindows</span>()
+
+<span class="comment"># 4. Comparar con lista de permitidas</span>
+<span class="variable">placas_restantes</span> <span class="operator">=</span> <span class="variable">placas_permitidas</span>.<span class="function">copy</span>()
+
+<span class="function">print</span>(<span class="string">"\n=== RESULTADOS ==="</span>)
+
+<span class="keyword">for</span> <span class="variable">p</span> <span class="keyword">in</span> <span class="variable">placas_leidas</span>:
+    <span class="keyword">if</span> <span class="variable">p</span> <span class="keyword">in</span> <span class="variable">placas_permitidas</span>:
+        <span class="function">print</span>( <span class="variable">p</span>, <span class="string">": ACCESO PERMITIDO - Bienvenido al estacionamiento del CBTis 144"</span>)
+        <span class="keyword">if</span> <span class="variable">p</span> <span class="keyword">in</span> <span class="variable">placas_restantes</span>:
+            <span class="variable">placas_restantes</span>.<span class="function">remove</span>(<span class="variable">p</span>)
+    <span class="keyword">else</span>:
+        <span class="function">print</span>( <span class="variable">p</span>, <span class="string">": ACCESO DENEGADO - No está en la lista de permitidas"</span>)
+
+<span class="comment"># 5. Mostrar resumen</span>
+<span class="function">print</span>(<span class="string">"\nPLACAS LEÍDAS:"</span>, <span class="variable">placas_leidas</span>)
+<span class="function">print</span>(<span class="string">"PLACAS RESTANTES (no escaneadas):"</span>, <span class="variable">placas_restantes</span>)
+
+<span class="function">print</span>(<span class="string">"\n Prueba finalizada correctamente con 2 imágenes de placas."</span>)</code></pre>
+                </div>
+            </div>
+
+            <div class="glossary-section">
+                <h2>📚 Glosario de Términos</h2>
+
+                <div class="glossary-item">
+                    <h3>🔧 cv2 (OpenCV)</h3>
+                    <p>Biblioteca de visión artificial para procesamiento de imágenes. Permite leer, modificar y analizar imágenes y videos.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>📖 pytesseract</h3>
+                    <p>Wrapper de Python para Tesseract-OCR. Permite extraer texto de imágenes mediante reconocimiento óptico de caracteres.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>🔍 OCR (Optical Character Recognition)</h3>
+                    <p>Tecnología que reconoce caracteres de texto dentro de imágenes digitales. Convierte imágenes de texto en texto editable.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>📁 imread()</h3>
+                    <p>Función de OpenCV que carga una imagen desde un archivo. Retorna la imagen como un array de numpy.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>📏 resize()</h3>
+                    <p>Cambia las dimensiones de una imagen. En este código ajusta todas las placas a 1000x400 píxeles para estandarizar el procesamiento.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>⚫ cvtColor()</h3>
+                    <p>Convierte una imagen de un espacio de color a otro. COLOR_BGR2GRAY transforma la imagen a escala de grises.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>🎯 Escala de grises</h3>
+                    <p>Representación de imagen con tonos de gris (0-255). Simplifica el procesamiento eliminando la información de color.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>⬛ threshold()</h3>
+                    <p>Convierte imagen a binaria (solo blanco y negro). THRESH_BINARY separa píxeles por un valor umbral (120 en este caso).</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>🔳 Binarización</h3>
+                    <p>Proceso que convierte imagen en solo dos valores: 0 (negro) o 255 (blanco). Mejora la legibilidad del texto para OCR.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>📝 image_to_string()</h3>
+                    <p>Función de pytesseract que extrae texto de una imagen. El parámetro lang="eng" especifica el idioma inglés.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>🧹 upper()</h3>
+                    <p>Convierte todo el texto a mayúsculas. Estandariza las placas para comparación sin importar mayúsculas/minúsculas.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>🔄 replace()</h3>
+                    <p>Elimina caracteres no deseados del texto detectado (espacios, guiones, saltos de línea) para limpiar la placa.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>🖼️ imshow()</h3>
+                    <p>Muestra una imagen en una ventana. Útil para visualizar el resultado del procesamiento.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>💾 imwrite()</h3>
+                    <p>Guarda una imagen en el disco. Permite almacenar las imágenes procesadas para referencia posterior.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>⏸️ waitKey()</h3>
+                    <p>Espera a que se presione una tecla. waitKey(0) mantiene las ventanas abiertas indefinidamente.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>❌ destroyAllWindows()</h3>
+                    <p>Cierra todas las ventanas de OpenCV abiertas. Libera recursos al finalizar el programa.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>📋 append()</h3>
+                    <p>Agrega un elemento al final de una lista. Se usa para acumular las placas leídas.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>📊 copy()</h3>
+                    <p>Crea una copia independiente de una lista. Permite modificar placas_restantes sin afectar placas_permitidas.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>🗑️ remove()</h3>
+                    <p>Elimina la primera ocurrencia de un elemento en una lista. Se usa para quitar placas ya escaneadas.</p>
+                </div>
+
+                <div class="glossary-item">
+                    <h3>✅ Control de acceso</h3>
+                    <p>Sistema que valida si una placa está autorizada. Compara el texto detectado con una lista predefinida.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copiarCodigo() {
+            const codigo = document.getElementById('pythonCode').innerText;
+            navigator.clipboard.writeText(codigo).then(() => {
+                const btn = document.querySelector('.copy-button');
+                const textoOriginal = btn.innerHTML;
+                btn.innerHTML = '✅ Código Copiado';
+                btn.style.background = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
+                
+                setTimeout(() => {
+                    btn.innerHTML = textoOriginal;
+                    btn.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+                }, 2000);
+            }).catch(err => {
+                alert('Error al copiar: ' + err);
+            });
+        }
+    </script>
+</body>
+</html>
